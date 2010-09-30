@@ -8,8 +8,17 @@
             <RowDefinition Height="23" />
         </Grid.RowDefinitions>
 
-        <ListBox ItemsSource="{Binding Path=Tweet, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" />
-        <Grid Grid.Row="2">
+        <ListView ItemsSource="{Binding Path=Tweet, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0">
+            <ListView.View>
+                <GridView AllowsColumnReorder="true" ColumnHeaderToolTip="">
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=Name}" Header="Name" Width="100"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=Text}" Header="Text" Width="500"/>
+                </GridView>
+
+            </ListView.View>
+        </ListView>
+
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition />
