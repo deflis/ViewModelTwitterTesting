@@ -27,8 +27,9 @@ namespace TwitterTesting
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-
-            System.Diagnostics.Process.Start(((ViewModel)DataContext).AuthorizeUrl);
+            var url = ((ViewModel)DataContext).AuthorizeUrl;
+            if(!string.IsNullOrEmpty(url))
+                System.Diagnostics.Process.Start(url);
         }
     }
 }

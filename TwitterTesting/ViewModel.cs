@@ -24,8 +24,8 @@ namespace TwitterTesting
             accessToken = token;
         }
 
-        List<TimelineItemViewModel> _tweet;
-        public IEnumerable<TimelineItemViewModel> Tweet
+        ObservableCollection<TimelineItemViewModel> _tweet = new ObservableCollection<TimelineItemViewModel>();
+        public ObservableCollection<TimelineItemViewModel> Tweet
         {
             get
             {
@@ -137,6 +137,7 @@ namespace TwitterTesting
                         }, e => MessageBox.Show(e.ToString()));
                     CanGetTimeline(this, new EventArgs());
                     _getAccessToken.Value.IsCanExecute = false;
+                    AuthorizeUrl = "";
                 }, false)
              );
 
@@ -144,24 +145,26 @@ namespace TwitterTesting
             {
                 return new Command(_ =>
                 {
-                    StreamingApi = new OAuthClient(ConsumerKey, ConsumerSecret, accessToken) { Url = "http://chirpstream.twitter.com/2b/user.json" }
+                    StreamingApi = new OAuthClient(ConsumerKey, ConsumerSecret, accessToken) { Url = "https://userstream.twitter.com/2/user.json" }
                         .GetResponseLines()
                         .Where(s => !string.IsNullOrWhiteSpace(s)) // filter invalid data
                         .Select(s => DynamicJson.Parse(s)).Publish();
-                    StreamingApi.Take(1).Subscribe(x => friendList = new HashSet<int>(x.friends.Select((Func<double, int>)(id => (int)id))), e => MessageBox.Show(e.ToString(), "FriendList"));
+                    StreamingApi.Take(1).Subscribe(x => friendList = new HashSet<int>(((double[])x.friends).Select(id => (int)id)), e => MessageBox.Show(e.ToString(), "FriendList"));
                     StreamingApi.Subscribe(x => this.PropertyChanged(x, new PropertyChangedEventArgs("StreamingApi")), e => MessageBox.Show(e.ToString(), "プロパティ変更"));
                     StreamingApi
                         .Where(x => x.text())
-                        .Select(x => new TimelineItemViewModel(x))
+                        .ObserveOnDispatcher()
                         .Subscribe(x =>
                         {
-                            _tweet.Add(x);
+                            _tweet.Add(new TimelineItemViewModel(x));
                             this.PropertyChanged(this, new PropertyChangedEventArgs("Tweet"));
                         });
+                    ((IConnectableObservable<dynamic>)StreamingApi).Connect();
+                    _startGetTimeline.Value.IsCanExecute = false;
                 }, false);
             });
 
-            PropertyChanged += new PropertyChangedEventHandler((sender, target) => { if (target.PropertyName == "StreamingApi") MessageBox.Show((dynamic)sender); });
+            //PropertyChanged += new PropertyChangedEventHandler((sender, target) => { if (target.PropertyName == "StreamingApi") MessageBox.Show(); });
             CanGetTimeline += new EventHandler((sender, e) => _startGetTimeline.Value.IsCanExecute = true);
         }
     }
