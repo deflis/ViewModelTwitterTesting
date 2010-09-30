@@ -24,12 +24,13 @@ namespace TwitterTesting
             accessToken = token;
         }
 
-        public ReadOnlyObservableCollection<TimelineItemViewModel> Tweet
+        List<TimelineItemViewModel> _tweet;
+        public IEnumerable<TimelineItemViewModel> Tweet
         {
             get
             {
                 if (StreamingApi != null)
-                    return (ReadOnlyObservableCollection<TimelineItemViewModel>)StreamingApi.Where(x => x.text()).Select(x => new TimelineItemViewModel(x)).ObserveOnDispatcher();
+                    return _tweet;
                 return null;
             }
         }
@@ -119,6 +120,7 @@ namespace TwitterTesting
                         requestToken = token;
                         AuthorizeUrl = authorizer.BuildAuthorizeUrl("http://twitter.com/oauth/authorize", token);
                     }, e => MessageBox.Show(e.ToString()));
+                    _getAccessToken.Value.IsCanExecute = true;
                 })
             );
             _getAccessToken = new Lazy<Command>(() =>
@@ -131,23 +133,35 @@ namespace TwitterTesting
                             UserId = res.ExtraData["user_id"].First();
                             ScreenName = res.ExtraData["screen_name"].First();
                             accessToken = res.Token;
+                            _startGetTimeline.Value.IsCanExecute = true;
                         }, e => MessageBox.Show(e.ToString()));
                     CanGetTimeline(this, new EventArgs());
-                })
-            );
+                    _getAccessToken.Value.IsCanExecute = false;
+                }, false)
+             );
 
             _startGetTimeline = new Lazy<Command>(() =>
             {
                 return new Command(_ =>
                 {
-                    StreamingApi = new OAuthClient(ConsumerKey, ConsumerSecret, accessToken) { Url = "https://userstream.twitter.com/2/user.json" }
+                    StreamingApi = new OAuthClient(ConsumerKey, ConsumerSecret, accessToken) { Url = "http://chirpstream.twitter.com/2b/user.json" }
                         .GetResponseLines()
                         .Where(s => !string.IsNullOrWhiteSpace(s)) // filter invalid data
-                        .Select(s => DynamicJson.Parse(s));
-                    StreamingApi.Take(1).Subscribe(x => friendList = new HashSet<int>(x.friends.Select((Func<double, int>)(id => (int)id))), e => MessageBox.Show(e.ToString())); ;
-                    StreamingApi.Subscribe(x => this.PropertyChanged(this, new PropertyChangedEventArgs("StreamingApi")), e => MessageBox.Show(e.ToString())); ;
-                });
-            },false);
+                        .Select(s => DynamicJson.Parse(s)).Publish();
+                    StreamingApi.Take(1).Subscribe(x => friendList = new HashSet<int>(x.friends.Select((Func<double, int>)(id => (int)id))), e => MessageBox.Show(e.ToString(), "FriendList"));
+                    StreamingApi.Subscribe(x => this.PropertyChanged(x, new PropertyChangedEventArgs("StreamingApi")), e => MessageBox.Show(e.ToString(), "プロパティ変更"));
+                    StreamingApi
+                        .Where(x => x.text())
+                        .Select(x => new TimelineItemViewModel(x))
+                        .Subscribe(x =>
+                        {
+                            _tweet.Add(x);
+                            this.PropertyChanged(this, new PropertyChangedEventArgs("Tweet"));
+                        });
+                }, false);
+            });
+
+            PropertyChanged += new PropertyChangedEventHandler((sender, target) => { if (target.PropertyName == "StreamingApi") MessageBox.Show((dynamic)sender); });
             CanGetTimeline += new EventHandler((sender, e) => _startGetTimeline.Value.IsCanExecute = true);
         }
     }

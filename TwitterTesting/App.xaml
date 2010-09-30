@@ -5,7 +5,6 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <DataTemplate DataType="{x:Type l:ViewModel}">
-            <l:MainWindow />
         </DataTemplate>
     </Application.Resources>
 </Application>

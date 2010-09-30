@@ -20,7 +20,7 @@
             <Button Grid.Column="1" Content="ブラウザを開く" Click="Button_Click" />
             <TextBox Grid.Column="2" Text="{Binding Path=PinCode}"/>
             <Button Grid.Column="3" Content="PIN入力" Command="{Binding Path=GetAccessToken}"/>
-            <Button Grid.Column="4" Content="送信" Command="{Binding Path=StartGetTimeline}"/>
+            <Button Grid.Column="4" Content="タイムライン取得開始" Command="{Binding Path=StartGetTimeline}"/>
         </Grid>
     </Grid>
 </Window>
