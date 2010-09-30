@@ -1,0 +1,26 @@
+﻿<Window x:Class="TwitterTesting.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525" DataContext="{Binding}" >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="23" />
+        </Grid.RowDefinitions>
+        <ListView Name="listView" ItemsSource="{Binding Path=Tweet}" Grid.Row="1" />
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="OAuth認証" Command="{Binding Path=GetRequestToken}"/>
+            <Button Grid.Column="1" Content="ブラウザを開く" Click="Button_Click" />
+            <TextBox Grid.Column="2" Text="{Binding Path=PinCode}"/>
+            <Button Grid.Column="3" Content="PIN入力" Command="{Binding Path=GetAccessToken}"/>
+            <Button Grid.Column="4" Content="送信" Command="{Binding Path=StartGetTimeline}"/>
+        </Grid>
+    </Grid>
+</Window>
